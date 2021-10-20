@@ -207,15 +207,6 @@ def mean_iou(y_true, y_pred):
 
 
 
-
-'''def tversky(y_true, y_pred, smooth=1e-6, alpha=0.9):
-    y_true_pos = K.flatten(y_true)
-    y_pred_pos = K.flatten(y_pred)
-    true_pos = K.sum(y_true_pos * y_pred_pos)
-    false_neg = K.sum(y_true_pos * (1 - y_pred_pos))
-    false_pos = K.sum((1 - y_true_pos) * y_pred_pos)
-    return (true_pos + smooth) / (true_pos + 0.7 * false_neg + 0.3 * false_pos + smooth)'''
-
 def to_one_hot(y_true, y_pred):
     y_pred_pos = K.one_hot(K.cast(y_pred, 'int32'), num_classes=5)
     y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
@@ -500,82 +491,12 @@ for idx, i in enumerate(train_data.values,0):
     if(np.all(Y_train[j]==0)):
         rmv_idx.append(j)
     j = j + 1
-    '''if(defect>=2):
-        print(np.unique(temp_Y))
-        print(np.unique(Y_train[j-4]))
-        print(np.unique(Y_train[j-3]))
-        print(np.unique(Y_train[j-2]))
-        print(np.unique(Y_train[j-1]))
-        plt.subplot(5,1,1)
-        plt.axis('off')
-        plt.imshow(temp_Y,cmap='gray')
-        plt.subplot(5,1,2)
-        plt.axis('off')
-        plt.imshow(Y_train[j-4],cmap='gray')
-        plt.subplot(5,1,3)
-        plt.axis('off')
-        plt.imshow(Y_train[j-3],cmap='gray')
-        plt.subplot(5,1,4)
-        plt.axis('off')
-        plt.imshow(Y_train[j-2],cmap='gray')
-        plt.subplot(5,1,5)
-        plt.axis('off')
-        plt.imshow(Y_train[j-1],cmap='gray')
-        plt.show()'''
-    '''temp_img = cv2.resize(temp_X[:,800:1200,:],(384,256),interpolation = cv2.INTER_LINEAR)
-    X_train[j] = temp_img
-    if(np.all(temp_Y[:,:800,:]==0)):
-        rmv_idx.append(j)
-    temp_img = cv2.resize(temp_Y[:,800:1200,:],(384,256),interpolation = cv2.INTER_LINEAR)
-    temp_img = np.reshape(temp_img,(256,384,-1))
-    Y_train[j] = temp_img
-    j = j + 1
-    temp_img = cv2.resize(temp_X[:,1200:,:],(384,256),interpolation = cv2.INTER_LINEAR)
-    X_train[j] = temp_img
-    if(np.all(temp_Y[:,1200:,:]==0)):
-        rmv_idx.append(j)
-    temp_img = cv2.resize(temp_Y[:,1200:,:],(384,256),interpolation = cv2.INTER_LINEAR)
-    temp_img = np.reshape(temp_img,(256,384,-1))
-    Y_train[j] = temp_img
-    j = j + 1'''
-SEED = 123
+SEED = 124
 combine = [ ]
 X_train = np.delete(X_train,rmv_idx,0)
 Y_train = np.delete(Y_train,rmv_idx,0)
 print(Y_train[0])
 print(Y_train.shape)
-
-'''df = pd.DataFrame(t1_defect,columns=['per'])
-plt.hist(t1_defect,bins=100)
-plt.show()
-df = pd.DataFrame(t2_defect,columns=['per'])
-plt.hist(t2_defect,bins=100)
-plt.show()
-df = pd.DataFrame(t3_defect,columns=['per'])
-plt.hist(t3_defect,bins=100)
-plt.show()
-df = pd.DataFrame(t4_defect,columns=['per'])
-plt.hist(t4_defect,bins=100)
-plt.show()
-Aug = albumentations.Compose([  
-                 albumentations.HorizontalFlip(p=1)])'''
-'''for (a, b) in zip(X_train,Y_train):
-    if(((np.unique(b).tolist()) != [0, 3]) and (np.unique(b).tolist()) != [0, 4]):
-        a = np.expand_dims(a,axis=0)
-        b = np.expand_dims(b,axis=0)
-        image_data_augmentator = training_datagen.flow(a, batch_size=1, shuffle=False)
-        mask_data_augmentator = mask_datagen.flow(b,batch_size=1,shuffle=False)
-        for x, y in zip(image_data_augmentator,mask_data_augmentator):
-            plt.subplot(2,1,1)
-            plt.axis('off')
-            plt.imshow(x[0].astype(np.int32))
-            plt.subplot(2,1,2)
-            plt.axis('off')
-            plt.imshow(y[0])
-            plt.show()
-            X_train = np.concatenate((X_train,np.expand_dims(x[0],axis = 0)), axis=0)
-            Y_train = np.concatenate((Y_train,np.expand_dims(y[0],axis = 0)), axis=0)
-            break'''
 
 
 
@@ -663,19 +584,6 @@ class_name = ['class1', 'class2', 'class3', 'class4','Overall']
 
 
 
-def categorical_focal_loss_fixed(y_true, y_pred):
-        epsilon = K.epsilon()
-        max_num = K.constant(256*384)
-        y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
-        y_pred_pos = y_pred[...,0:]
-        y_pred_pos = K.clip(y_pred_pos, epsilon, 1. - epsilon)
-        w = K.sum(K.sum(y_true_pos,axis = 2),axis=1)
-        w = K.clip(w, epsilon, max_num)
-        w = 1/w
-        w = w[:,None,None,:]
-        cross_entropy = -y_true_pos * K.log(y_pred_pos)
-        loss =  w * cross_entropy
-        return K.mean(K.sum(loss, axis=-1))
 
 def categorical_focal_loss_fixed(y_true, y_pred):
         epsilon = K.epsilon()
@@ -707,27 +615,6 @@ vloss1 = results.history['val_loss']
 #testing_data_augmentator = testing_datagen.flow(x_tst, batch_size=8, shuffle=False)
 preds_train = model.predict(x_tst, batch_size=4)
 
-'''def categorical_focal_loss_fixed(y_true, y_pred):
-        """
-        :param y_true: A tensor of the same shape as `y_pred`
-        :param y_pred: A tensor resulting from a softmax
-        :return: Output tensor.
-        """
-
-        # Clip the prediction value to prevent NaN's and Inf's
-        print("y_true: ", y_true.shape)
-        print("y_pred: ", y_pred.shape)
-        epsilon = 1e-7 
-        y_pred = np.clip(y_pred, epsilon, 1. - epsilon)
-
-        # Calculate Cross Entropy
-        cross_entropy = -y_true * np.log(y_pred)
-        print(cross_entropy)
-        print(cross_entropy.shape)
-        loss =  pow(1 - y_pred, 2) * cross_entropy
-        print(loss)
-        print(loss.shape)
-        return np.mean(np.sum(loss, axis=-1))'''
 
 samples = len(x_tst)
 y_preds = np.argmax(preds_train,axis=-1)
@@ -756,22 +643,6 @@ filename = 'steel_DSC_SCE(n).csv'
 submission.to_csv(filename,index=False)
 tverskyindex = []
 
-
-
-
-def categorical_focal_loss_fixed(y_true, y_pred):
-        epsilon = K.epsilon()
-        max_num = K.constant(256*384)
-        y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
-        y_pred_pos = y_pred[...,0:]
-        y_pred_pos = K.clip(y_pred_pos, epsilon, 1. - epsilon)
-        w = K.sum(K.sum(y_true_pos,axis = 2),axis=1)
-        w = K.clip(w, epsilon, max_num)
-        w = 1/w
-        w = w[:,None,None,:]
-        cross_entropy = -y_true_pos * K.log(y_pred_pos)
-        loss =  w*(K.pow(1 - y_pred_pos, 1) * cross_entropy)
-        return K.mean(K.sum(loss, axis=-1))
 
 
 model = sm.Unet('resnet34', input_shape = (None,None,3), classes=5, activation='softmax', encoder_weights='imagenet')
@@ -812,19 +683,6 @@ filename = 'steel_DSC_(SCE(n) + FL(1)).csv'
 submission.to_csv(filename,index=False)
 tverskyindex = []
 
-def categorical_focal_loss_fixed(y_true, y_pred):
-        epsilon = K.epsilon()
-        max_num = K.constant(256*384)
-        y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
-        y_pred_pos = y_pred[...,0:]
-        y_pred_pos = K.clip(y_pred_pos, epsilon, 1. - epsilon)
-        w = K.sum(K.sum(y_true_pos,axis = 2),axis=1)
-        w = K.clip(w, epsilon, max_num)
-        w = 1/w
-        w = w[:,None,None,:]
-        cross_entropy = -y_true_pos * K.log(y_pred_pos)
-        loss =  w*(K.pow(1 - y_pred_pos, 2) * cross_entropy)
-        return K.mean(K.sum(loss, axis=-1))
 
 model = sm.Unet('resnet34', input_shape = (None,None,3), classes=5, activation='softmax', encoder_weights='imagenet')
 
@@ -863,20 +721,6 @@ submission = pd.DataFrame({'Class': ['C1', 'C2','C3', 'C4'], 'DSC': tverskyindex
 filename = 'steel_DSC_(SCE(n) + FL(2)).csv'
 submission.to_csv(filename,index=False)
 tverskyindex = []
-def categorical_focal_loss_fixed(y_true, y_pred):
-        epsilon = K.epsilon()
-        max_num = K.constant(256*384)
-        y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
-        y_pred_pos = y_pred[...,0:]
-        y_pred_pos = K.clip(y_pred_pos, epsilon, 1. - epsilon)
-        w = K.sum(K.sum(y_true_pos,axis = 2),axis=1)
-        w = K.clip(w, epsilon, max_num)
-        w = 1/w
-        w = w[:,None,None,:]
-        cross_entropy = -y_true_pos * K.log(y_pred_pos)
-        loss =  w*(K.pow(1 - y_pred_pos, 3) * cross_entropy)
-        return K.mean(K.sum(loss, axis=-1))
-
 model = sm.Unet('resnet34', input_shape = (None,None,3), classes=5, activation='softmax', encoder_weights='imagenet')
 
 model.compile(optimizer=Adam(0.001),loss=categorical_focal_loss_fixed, metrics =['sparse_categorical_accuracy'])  
@@ -917,20 +761,6 @@ submission.to_csv(filename,index=False)
 tverskyindex = []
 
 
-def categorical_focal_loss_fixed(y_true, y_pred):
-        epsilon = K.epsilon()
-        max_num = K.constant(256*384)
-        y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
-        y_pred_pos = y_pred[...,0:]
-        y_pred_pos = K.clip(y_pred_pos, epsilon, 1. - epsilon)
-        w = K.sum(K.sum(y_true_pos,axis = 2),axis=1)
-        w = K.clip(w, epsilon, max_num)
-        w = 1/w
-        w = w[:,None,None,:]
-        cross_entropy = -y_true_pos * K.log(y_pred_pos)
-        loss =  w*(K.pow(1 - y_pred_pos, 4) * cross_entropy)
-        return K.mean(K.sum(loss, axis=-1))
-
 model = sm.Unet('resnet34', input_shape = (None,None,3), classes=5, activation='softmax', encoder_weights='imagenet')
 
 model.compile(optimizer=Adam(0.001),loss=categorical_focal_loss_fixed, metrics =['sparse_categorical_accuracy'])  
@@ -969,21 +799,6 @@ submission = pd.DataFrame({'Class': ['C1', 'C2','C3', 'C4'], 'DSC': tverskyindex
 filename = 'steel_DSC_(SCE(n) + FL(4)).csv'
 submission.to_csv(filename,index=False)
 tverskyindex = []
-
-def categorical_focal_loss_fixed(y_true, y_pred):
-        epsilon = K.epsilon()
-        max_num = K.constant(256*384)
-        y_true_pos = K.one_hot(K.cast(y_true, 'int32'), num_classes=5)
-        y_true_pos = y_true_pos[:,:,:,None,:]
-        y_pred_pos = y_pred[...,0:]
-        y_pred_pos = K.clip(y_pred_pos, epsilon, 1. - epsilon)
-        w = K.sum(K.sum(y_true_pos,axis = 2),axis=1)
-        w = K.clip(w, epsilon, max_num)
-        w = 1/w
-        w = w[:,None,None,:]
-        cross_entropy = -y_true_pos * K.log(y_pred_pos)
-        loss =  w*(K.pow(1 - y_pred_pos, 5) * cross_entropy)
-        return K.mean(K.sum(loss, axis=-1))
 
 
 
